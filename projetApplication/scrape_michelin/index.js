@@ -30,46 +30,36 @@ var cheerio = require('cheerio');
 
 
 
-//there are 35 pages of restaurants
+//there are 35 pages of restaurants (626)
 //The page only displays 10 restaurants per page
 //At the end of each web url there's a [...]/page-i => i =1,2,3...,35
 
-function aaa () {
-    return new Promise(function(resolve, reject){
-        tab = [];
-        for(var i = 0; i < 100; i++)
-        {
-            tab[i] = i;
-        }
-        resolve(tab);
-    })
+
+var restaurantArray = new Array();
+var counter=0;
+
+var getMichelinArray = function(callback){
+  for(var i=1;i<39;i++)
+  {
+      counter++;
+    request('https://restaurant.michelin.fr/restaurants/france/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-'+i+'', function (error, response, html) {
+      if (!error && response.statusCode == 200) {
+        var $ = cheerio.load(html);
+        //Get and select the div in which we can read each name of each restaurant in the html
+        $('div.poi_card-display-title').each(function(i, element){  
+          var div = $(this);
+          //console.log(div.text()); //return the <div> text => the restaurant name
+          //We add the name of the restaurant
+          restaurantArray.push(div.text().trim())
+
+          if(counter == 38)
+          {
+            //Return the array loaded into getMichelinArray
+            callback(restaurantArray);
+          }
+      });
+      }
+    });
+  }
 }
-
-createTab().then(function(result){
-    for(var i = 0; i < result.length; i++)
-    {
-        console.log(result[i]);
-    }
-    console.log("après stp");
-})
-
-function createTab(){
-    return new Promise(function(resolve, reject){
-        tab = [];
-        var url = 'https://restaurant.michelin.fr/restaurants/france/restaurants-1-etoile-michelin/restaurants-2-etoiles-michelin/restaurants-3-etoiles-michelin/page-1';
-        request(url, function (error, response, html) {
-            if (!error && response.statusCode == 200) {
-                //We load all the html into $ until the <div> tag : class = "div.poi_card-display-title" 
-                var $ = cheerio.load(html);
-                $('div.poi_card-display-title').each(function(i, element){  
-                    var div = $(this);
-                    //console.log(div.text()); //return the <div> text => the restaurant name
-                    tab[i] = div.text();
-                });
-                resolve(tab);
-            }
-        })
-
-    })
-}
-
+module.exports = getMichelinArray;
